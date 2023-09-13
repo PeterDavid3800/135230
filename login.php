@@ -8,7 +8,7 @@
 
 <body>
     <h2>Login</h2>
-    <form action="login_handler.php" method="POST">
+    <form action="process_login.php" method="POST">
         <label for="email">Email:</label>
         <input type="email" id="email" name="email" required><br><br>
 
