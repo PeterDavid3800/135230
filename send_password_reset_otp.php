@@ -4,6 +4,10 @@ session_start(); // Start a session
 // Include the PHPMailer library
 use PHPMailer\PHPMailer\PHPMailer;
 use PHPMailer\PHPMailer\Exception;
+require_once 'vendor/autoload.php'; 
+
+use OTPHP\TOTP;
+
 
 require 'vendor/autoload.php'; // Adjust the path as needed
 

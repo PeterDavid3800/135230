@@ -1,4 +1,19 @@
 <?php
+require_once 'vendor/autoload.php';
+
+use OTPHP\TOTP;
+
+// Function to generate a TOTP secret
+function generateTOTPSecret() {
+    // Generate a new TOTP secret
+    $totp = TOTP::create();
+    
+    // Get the secret key as a string
+    $secret = $totp->getSecret();
+    
+    return $secret;
+}
+
 // Check if the form is submitted
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
     // Include the database connection file
@@ -13,10 +28,16 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $password = password_hash($_POST["password"], PASSWORD_BCRYPT); // Hash the password
     $roleId = $_POST["role"];
 
+    // Check if 2FA should be enabled
+    $enable2FA = isset($_POST['enable_2fa']) && $_POST['enable_2fa'] == 'on';
+
+    // Generate a TOTP secret key if 2FA is enabled
+    $totpSecret = $enable2FA ? generateTOTPSecret() : null;
+
     // Prepare and execute the SQL query to insert data into the 'users' table
-    $sql = "INSERT INTO users (Username, Email, Password, DateOfBirth, RoleID, Gender) VALUES (?, ?, ?, ?, ?, ?)";
+    $sql = "INSERT INTO users (Username, Email, Password, DateOfBirth, RoleID, Gender, TOTPSecret, Is2FAEnabled) VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
     $stmt = $connect->prepare($sql);
-    $stmt->bind_param("ssssis", $username, $email, $password, $dateOfBirth, $roleId, $gender);
+    $stmt->bind_param("ssssisis", $username, $email, $password, $dateOfBirth, $roleId, $gender, $totpSecret, $enable2FA);
 
     // Set the username (you can generate a username or use some logic to create one)
     $username = $firstname . $lastname;
