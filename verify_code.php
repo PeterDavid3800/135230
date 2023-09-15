@@ -66,9 +66,10 @@
 
 <body>
     <h2>Two-Factor Authentication via Email</h2>
-    <form action="process_2fa.php" method="POST">
-        <label for="email">Enter Your Email:</label>
-        <input type="email" id="email" name="email" required>
+    <form action="process_verify.php" method="POST">
+
+        <label for="code">Enter the Code Sent to Your Email:</label>
+        <input type="text" id="code" name="code" required>
 
         <input type="submit" value="Submit">
     </form>

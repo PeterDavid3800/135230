@@ -1,60 +1,55 @@
 <?php
-require_once 'vendor/autoload.php';
-use OTPHP\TOTP;
+use PHPMailer\PHPMailer\PHPMailer;
+use PHPMailer\PHPMailer\Exception;
 
-$host = "localhost";
-$username = "root";
-$password = "";
-$database = "isproject2";
+require 'PHPMailer-master/Exception.php';
+require 'PHPMailer-master/PHPMailer.php';
+require 'PHPMailer-master/SMTP.php';
 
-$connect = new mysqli($host, $username, $password, $database);
-
-if ($connect->connect_error) {
-    die("Connection failed: " . $connect->connect_error);
+// Function to generate a random verification code
+function generateVerificationCode() {
+    return mt_rand(100000, 999999);
 }
 
-if ($_SERVER["REQUEST_METHOD"] == "POST") {
-    $userID = $_POST["userID"];
-    $otpCode = $_POST["otp_code"];
+// Get the user's email from the form
+$userEmail = $_POST['email'];
 
-    // Retrieve the TOTP secret from the database based on the user's ID
-    $sql = "SELECT VerificationToken FROM users WHERE UserID = ?";
-    $stmt = $connect->prepare($sql);
-    $stmt->bind_param("i", $userID);
-    $stmt->execute();
-    $stmt->bind_result($totpSecret);
+// Generate a verification code
+$verificationCode = generateVerificationCode();
 
-    if ($stmt->fetch()) {
-        // Verify the TOTP code using the retrieved secret
-        if (verifyTOTPCode($otpCode, $totpSecret)) {
-            echo "TOTP code is valid.";
-            // Redirect the user to the dashboard or perform other actions here
-        } else {
-            echo "TOTP code is invalid.";
-        }
-    } else {
-        echo "User not found or TOTP secret not available.";
-    }
+// Set up PHPMailer
+$mail = new PHPMailer(true);
+try {
+    // Server settings
+    $mail->SMTPDebug = 2; // Set to 2 for debugging
+    $mail->isSMTP();
+    $mail->Host = 'davidpeter487@gmail.com'; // Your SMTP server
+    $mail->Port = 587; // SMTP port
+    $mail->SMTPAuth = true;
+    $mail->Username = 'davidpeter487@gmail.com'; // Your email address
+    $mail->Password = 'BreezerTech.'; // Your email password
+    $mail->SMTPSecure = 'tls'; // Enable TLS encryption
 
-    $stmt->close();
-    $connect->close();
-}
+    // Recipients
+    $mail->setFrom('your_email@example.com', 'Your Name');
+    $mail->addAddress($userEmail);
 
-function verifyTOTPCode($otpCode, $totpSecret) {
-    try {
-        // Create a TOTP instance with the provided TOTP secret
-        $totp = TOTP::create();
-        $totp->setSecret($totpSecret); // Set the secret
+    // Email content
+    $mail->isHTML(true);
+    $mail->Subject = 'Two-Factor Authentication Code';
+    $mail->Body = 'Your verification code is: ' . $verificationCode;
 
-        // Verify the TOTP code
-        if ($totp->verify($otpCode)) {
-            return true; // TOTP code is valid
-        } else {
-            return false; // TOTP code is invalid
-        }
-    } catch (\Exception $e) {
-        // Handle any exceptions (e.g., invalid secret or code format)
-        return false;
-    }
+    // Send the email
+    $mail->send();
+
+    // Store the verification code in a session or database
+    // For simplicity, we'll just display it here
+    echo 'Verification code sent successfully. Code: ' . $verificationCode;
+
+    // Redirect the user to 'verify_code.php' after successful email sending
+    header("Location: verify_code.php");
+    exit();
+} catch (Exception $e) {
+    echo 'Error: ' . $mail->ErrorInfo;
 }
 ?>
